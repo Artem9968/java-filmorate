@@ -16,7 +16,7 @@ import java.util.Map;
 @Slf4j
 public class FilmService {
 
-    private  final Map<Long, Film> films = new HashMap<>();
+    private final Map<Long, Film> films = new HashMap<>();
 
     public Collection<Film> getAllFilms() {
         log.info("Обработка Get-запроса...");
@@ -39,9 +39,8 @@ public class FilmService {
         if (oldFilm == null) {
             throw new NotFoundException("Фильм не найден");
         }
-
-        updateFilmDetails(oldFilm, newFilm);
-        return oldFilm;
+        films.put(oldFilm.getId(), newFilm);
+        return newFilm;
     }
 
     private long getNextId() {
@@ -73,12 +72,5 @@ public class FilmService {
     private void logAndThrow(String message) {
         log.error(message);
         throw new ValidationException(message);
-    }
-
-    private void updateFilmDetails(Film oldFilm, Film newFilm) {
-        oldFilm.setName(newFilm.getName());
-        oldFilm.setDescription(newFilm.getDescription());
-        oldFilm.setReleaseDate(newFilm.getReleaseDate());
-        oldFilm.setDuration(newFilm.getDuration());
     }
 }

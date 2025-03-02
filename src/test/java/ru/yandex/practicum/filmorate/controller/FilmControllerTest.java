@@ -19,12 +19,12 @@ public class FilmControllerTest {
 
     public static FilmController filmController = new FilmController(new FilmService());
     Film film = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film1 = Film.of(Long.parseLong("0"), "13", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
+    Film film1 = Film.of(Long.parseLong("0"), "ко65", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film2 = Film.of(Long.parseLong("0"), "name", "descripti", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film3 = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("1990-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film4 = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 1);
     static Film film5 = Film.of(Long.parseLong("0"), "name111", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film6 = Film.of(Long.parseLong("1"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
+    Film film6 = Film.of(Long.parseLong("1"), " ", "description ", LocalDate.parse("2029-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film7 = Film.of(Long.parseLong("1"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
 
     @BeforeAll
@@ -58,7 +58,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    public void testNoId() throws ValidationException, NotFoundException {
+    public void testNoId() {
         filmController.update(film6);
     }
 

@@ -19,14 +19,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class UserControllerTest {
 
     public static UserController userController = new UserController(new UserService());
-    User user = User.of(Long.parseLong("0"), "name111", "name1111@mail.ru", "name111@mail.ru", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    static String name = "name1";
+    static String email = "name112@mail.ru";
+    static LocalDate data = LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    User user = User.of(Long.parseLong("0"), "name111", "name1@mail.ru", "name111@mail.ru", data);
     static User user10 = User.of(Long.parseLong("0"), "name111", "name1113@mail.ru", "name111@mail.ru", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-    User user1 = User.of(Long.parseLong("0"), "name1", "name1211@mail.ru", "name111@mail.ru", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-    User user2 = User.of(Long.parseLong("0"), "name1", "name1311@mail.ru", "name111@mail.ru", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-    User user3 = User.of(Long.parseLong("0"), "name1", "name1641@mail.ru", " ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-    User user4 = User.of(Long.parseLong("0"), "name1", "name1851@mail.ru", "name111@mail.ru", LocalDate.parse("2021-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-    User user5 = User.of(Long.parseLong("-1"), "name1", "name1611@mail.ru", "name119@mail.ru", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-    User user6 = User.of(Long.parseLong("-1"), "name1", "name9191@mail.ru", "name111@mail.ruv", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    User user1 = User.of(Long.parseLong("0"), name, "name1141@mail.ru", "name111@mail.ru", data);
+    User user2 = User.of(Long.parseLong("0"), name, "name1311@mail.ru", "name111@mail.ru", data);
+    User user3 = User.of(Long.parseLong("0"), name, email, " ", data);
+    User user4 = User.of(Long.parseLong("0"), name, "name1851@mail.ru", "name111@mail.ru", data);
+    User user5 = User.of(Long.parseLong("-1"), name, email, "name119@mail.ru", data);
+    User user6 = User.of(Long.parseLong("-1"), name, email, "name111@mail.ruv", data);
 
     @BeforeAll
     public static void start() throws ValidationException, DuplicatedDataException {
