@@ -75,8 +75,8 @@ public class UserControllerTest {
         }, "You can't created User without login");
     }
 
-    @AfterAll
-    public static void testGet() {
+    @Test
+    public void testGet() {
         assertNotNull(userController.findAll());
     }
 }

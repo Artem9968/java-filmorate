@@ -44,7 +44,7 @@ public class FilmControllerTest {
 
     @Test
     public void testDescription() throws ValidationException, NotFoundException {
-        filmController.createFilm(film2);
+        assertNotNull(filmController.createFilm(film2));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class FilmControllerTest {
 
     @Test
     public void testNoId() {
-        filmController.update(film6);
+        assertEquals(filmController.update(film6), film6);
     }
 
     @Test
@@ -67,8 +67,8 @@ public class FilmControllerTest {
         filmController.update(film7);
     }
 
-    @AfterAll
-    public static void testGet() throws ValidationException, NotFoundException {
+    @Test
+    public void testGet() throws ValidationException, NotFoundException {
         assertNotNull(filmController.getFilms());
     }
 }
