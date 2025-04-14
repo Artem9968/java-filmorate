@@ -16,7 +16,6 @@ public interface FilmStorage {
 
     Film update(Film film) throws NotFoundException;
 
-    //Film
     void addLike(Long filmId, Long userId) throws NotFoundException;
 
     void removeLike(Long filmId, Long userId) throws NotFoundException;

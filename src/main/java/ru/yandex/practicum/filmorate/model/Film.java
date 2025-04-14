@@ -8,10 +8,12 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
-@AllArgsConstructor(staticName = "of")
+//@AllArgsConstructor(staticName = "of")
 public class Film {
 
     private Long id;
@@ -27,4 +29,6 @@ public class Film {
 
     @NotNull(message = "Продолжительность фильма необходимо указать")
     private int duration;
+
+    private Set<Long> likedUsers = new HashSet<>();
 }
