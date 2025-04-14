@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -30,11 +31,11 @@ public class FilmService {
         return filmStorage.getAllFilms();
     }
 
-    public Film create(@Valid Film film) {
+    public Film create(Film film) throws ValidationException {
         return filmStorage.createFilm(film);
     }
 
-    public Film update(@Valid Film newFilm) {
+    public Film update(Film newFilm) throws NotFoundException, ValidationException {
         return filmStorage.update(newFilm);
     }
 

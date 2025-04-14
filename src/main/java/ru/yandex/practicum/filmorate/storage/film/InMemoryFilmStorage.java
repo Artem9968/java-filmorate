@@ -1,7 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,7 +36,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film createFilm(Film film) {
+    public Film createFilm(Film film) throws ValidationException {
         log.info("Обработка Create-запроса...");
         validateFilm(film);
         film.setId(getNextId());
@@ -47,7 +45,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film update(@Valid Film newFilm) {
+    public Film update(Film newFilm) throws NotFoundException, ValidationException {
         log.info("Обработка Put-запроса...");
         validateFilmId(newFilm.getId());
 
@@ -91,7 +89,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film findById(Long id) {
+    public Film findById(Long id) throws NotFoundException {
         if (id == null) {
             throw new ValidationException("ID фильма не должно быть пустым");
         }

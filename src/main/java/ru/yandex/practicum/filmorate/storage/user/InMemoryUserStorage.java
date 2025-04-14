@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.DuplicatedDataException;
@@ -30,7 +29,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User create(@Valid User user) {
+    public User create(User user) throws ValidationException, DuplicatedDataException  {
         log.info("Обработка Create-запроса...");
         duplicateCheck(user);
 
@@ -42,12 +41,13 @@ public class InMemoryUserStorage implements UserStorage {
         validateBirthday(user.getBirthday());
 
         user.setId(getNextId());
+        user.setFriends(new HashSet<>());
         users.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public User update(@Valid User newUser) {
+    public User update(User newUser)  throws NotFoundException, ValidationException {
         if (newUser.getId() == null) {
             logAndThrow(new ValidationException("Id должен присутствовать"));
         }
@@ -74,7 +74,7 @@ public class InMemoryUserStorage implements UserStorage {
     private void duplicateCheck(User user) {
         for (User u : users.values()) {
             if (u.getEmail().equals(user.getEmail())) {
-                logAndThrow(new DuplicatedDataException("Эта почта уже используется"));
+                throw new DuplicatedDataException("Эта почта уже используется");
             }
         }
     }
@@ -92,13 +92,13 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     private void validateBirthday(LocalDate birthday) {
-        if (birthday != null) {
-            if (birthday.isAfter(LocalDate.now())) {
-                logAndThrow(new ValidationException("Дата рождения не должна быть из будущего"));
-            }
-        } else {
-            logAndThrow(new ValidationException("Дата рождения должна быть указана"));
+        if (birthday == null) {
+            throw new ValidationException("Дата рождения должна быть указана");
         }
+            if (birthday.isAfter(LocalDate.now())) {
+                throw new ValidationException("Дата рождения не должна быть из будущего");
+            }
+
     }
 
     private void logAndThrow(RuntimeException exception) {

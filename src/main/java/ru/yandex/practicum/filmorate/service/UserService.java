@@ -4,8 +4,9 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+
 import ru.yandex.practicum.filmorate.exceptions.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -30,12 +31,11 @@ public class UserService {
         return userStorage.findAll();
     }
 
-    public User create(@Valid User user) {
+    public User create(User user) throws ValidationException, DuplicatedDataException {
         return userStorage.create(user);
     }
 
-
-    public User update(@Valid User newUser) {
+    public User update(User newUser) throws NotFoundException, ValidationException {
         return userStorage.update(newUser);
     }
     public User findById(Long id) throws NotFoundException, ValidationException {
