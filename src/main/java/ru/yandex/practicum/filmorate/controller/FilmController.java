@@ -58,14 +58,15 @@ public class FilmController {
         return filmService.getFilmById(id);
     }
 
+    //лайк
     @PutMapping("/{id}/like/{userId}")
     public ResponseEntity<?> addLike(@PathVariable Long id, @PathVariable Long userId) {
         try {
             filmService.addLike(id, userId);
-            return ResponseEntity.ok().build(); // Возвращаем 200 OK, если лайк добавлен
+            return ResponseEntity.ok().build(); // возвращаем 200, если лайк добавлен
         } catch (NotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage())); // Возвращаем 404 и JSON с ошибкой
+                    .body(Map.of("error", e.getMessage())); // возвращаем 404 и JSON с сообщением
         }
     }
 
@@ -76,9 +77,9 @@ public class FilmController {
         return ResponseEntity.ok().build();
     }
 
-    //получение популярных фильмов
+    //получение топа фильмов
     @GetMapping("/popular")
-    public Collection<Film> getTopFilms(@RequestParam(defaultValue = "10") int count) {
+    public Collection<Film> getTopFilms(@RequestParam(defaultValue = "3") int count) {
         return filmService.getTopFilms(count);
     }
 }

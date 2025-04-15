@@ -29,7 +29,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User create(User user) throws ValidationException, DuplicatedDataException  {
+    public User create(User user) {
         log.info("Обработка Create-запроса...");
         duplicateCheck(user);
 
@@ -47,23 +47,27 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User update(User newUser)  throws NotFoundException, ValidationException {
+    public User update(User newUser) {
         if (newUser.getId() == null) {
-            logAndThrow(new ValidationException("Id должен присутствовать"));
+            throw new ValidationException("Id должен присутствовать");
         }
 
-        if (users.containsKey(newUser.getId())) {
-            User oldUser = users.get(newUser.getId());
-
-            oldUser.setEmail(newUser.getEmail());
-            oldUser.setLogin(newUser.getLogin());
-            oldUser.setName(newUser.getName() != null ? newUser.getName() : newUser.getLogin());
-            oldUser.setBirthday(newUser.getBirthday());
-            return oldUser;
-        } else {
-            logAndThrow(new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден"));
+        if (!users.containsKey(newUser.getId())) {
+            throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
         }
-        return null;
+        User oldUser = users.get(newUser.getId());
+        oldUser.setEmail(newUser.getEmail());
+        oldUser.setLogin(newUser.getLogin());
+        oldUser.setName(newUser.getName() != null ? newUser.getName() : newUser.getLogin());
+        oldUser.setBirthday(newUser.getBirthday());
+
+        if (newUser.getFriends() == null) {
+            newUser.setFriends(new HashSet<>());
+        }
+        oldUser.setFriends(new HashSet<>(newUser.getFriends()));
+
+        users.put(oldUser.getId(), oldUser);
+        return oldUser;
     }
 
     private long getNextId() {
@@ -81,13 +85,13 @@ public class InMemoryUserStorage implements UserStorage {
 
     private void validateEmail(String email) {
         if (email == null || email.isBlank() || !email.contains("@") || email.contains(" ") || email.length() == 1) {
-            logAndThrow(new ValidationException("Неверный формат электронной почты"));
+            throw new ValidationException("Неверный формат электронной почты");
         }
     }
 
     private void validateLogin(String login) {
         if (login == null || login.contains(" ") || login.isBlank()) {
-            logAndThrow(new ValidationException("Логин не должен быть пустым или состоять из пробелов"));
+            throw new ValidationException("Логин не должен быть пустым или состоять из пробелов");
         }
     }
 
@@ -95,25 +99,20 @@ public class InMemoryUserStorage implements UserStorage {
         if (birthday == null) {
             throw new ValidationException("Дата рождения должна быть указана");
         }
-            if (birthday.isAfter(LocalDate.now())) {
-                throw new ValidationException("Дата рождения не должна быть из будущего");
-            }
+        if (birthday.isAfter(LocalDate.now())) {
+            throw new ValidationException("Дата рождения не должна быть из будущего");
+        }
 
-    }
-
-    private void logAndThrow(RuntimeException exception) {
-        log.error(exception.getMessage());
-        throw exception;
     }
 
     @Override
     public User findById(Long id) throws NotFoundException {
         if (id == null) {
-            throw new ValidationException("ID cannot be null");
+            throw new ValidationException("Id должен присутствовать");
         }
         User user = users.get(id);
         if (user == null) {
-            throw new NotFoundException("User with ID = " + id + " not found");
+            throw new NotFoundException("Пользователь не найден");
         }
         log.info("User found: {}", user);
         return user;
@@ -137,7 +136,7 @@ public class InMemoryUserStorage implements UserStorage {
         update(user);
         update(friend);
 
-        log.info("User with ID = {} added as a friend to user with ID = {}", friendId, userId);
+        log.info("Пользователь с ID = {} добавил в друзья пользователя с ID = {}", friendId, userId);
     }
 
     @Override
@@ -155,7 +154,7 @@ public class InMemoryUserStorage implements UserStorage {
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
 
-        log.info("User with ID = {} has been removed from friends of user with ID = {}", friendId, userId);
+        log.info("Пользователь с ID = {} удалил из друзей пользователя с ID = {}", friendId, userId);
         return user;
     }
 

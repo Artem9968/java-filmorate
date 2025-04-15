@@ -38,7 +38,6 @@ public class UserControllerTest {
         UserStorage userStorage = new InMemoryUserStorage();
         userController = new UserController(new UserService(userStorage));
         userController.create(user10);
-
     }
 
     @Test

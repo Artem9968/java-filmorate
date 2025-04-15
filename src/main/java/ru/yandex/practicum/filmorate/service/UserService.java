@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,10 +10,7 @@ import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -38,6 +34,7 @@ public class UserService {
     public User update(User newUser) throws NotFoundException, ValidationException {
         return userStorage.update(newUser);
     }
+
     public User findById(Long id) throws NotFoundException, ValidationException {
         return userStorage.findById(id);
     }

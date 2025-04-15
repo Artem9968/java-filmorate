@@ -36,7 +36,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film createFilm(Film film) throws ValidationException {
+    public Film createFilm(Film film) {
         log.info("Обработка Create-запроса...");
         validateFilm(film);
         film.setId(getNextId());
@@ -45,7 +45,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film update(Film newFilm) throws NotFoundException, ValidationException {
+    public Film update(Film newFilm) {
         log.info("Обработка Put-запроса...");
         validateFilmId(newFilm.getId());
 
@@ -59,28 +59,23 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private void validateFilmId(Long id) {
         if (id == null) {
-            logAndThrow("Идентификатор фильма не может быть null");
+            throw new ValidationException("Идентификатор фильма не может быть null");
         }
     }
 
-    private void validateFilm(Film film) throws ValidationException {
+    private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
-            logAndThrow("Название фильма не должно быть пустым");
+            throw new ValidationException("Название фильма не должно быть пустым");
         }
         if (film.getDescription() != null && film.getDescription().length() > 200) {
-            logAndThrow("Описание фильма не должно превышать 200 символов");
+            throw new ValidationException("Описание фильма не должно превышать 200 символов");
         }
         if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            logAndThrow("Дата релиза фильма не должна быть раньше 28 декабря 1895 года");
+            throw new ValidationException("Дата релиза фильма не должна быть раньше 28 декабря 1895 года");
         }
         if (film.getDuration() <= 0) {
-            logAndThrow("Продолжительность фильма может быть только положительным числом");
+            throw new ValidationException("Продолжительность фильма может быть только положительным числом");
         }
-    }
-
-    private void logAndThrow(String message) {
-        log.error(message);
-        throw new ValidationException(message);
     }
 
     private long getNextId() {
@@ -102,18 +97,18 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public void addLike(Long filmId, Long userId) throws NotFoundException {
-        Film film = findById(filmId); // Проверяем, существует ли фильм
+        Film film = findById(filmId); // проверяем, существует ли фильм
         if (film == null) {
             throw new NotFoundException("Такого фильма не существует");
         }
 
         User user = userStorage.findById(userId);
         if (user == null) {
-            throw new NotFoundException(String.format("not found", userId));
+            throw new NotFoundException(String.format("не найден", userId));
         }
 
         film.getLikedUsers().add(userId);
-        log.info("User with ID = {} liked the film with ID = {}", userId, filmId);
+        log.info("Пользователь с ID = {} поставил лайк фильму с ID = {}", userId, filmId);
     }
 
     @Override
@@ -125,20 +120,20 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         User user = userStorage.findById(userId);
         if (user == null) {
-            throw new NotFoundException(String.format("not found", userId));
+            throw new NotFoundException(String.format("Пользователя нет", userId));
         }
 
         if (!film.getLikedUsers().contains(userId)) {
-            throw new NotFoundException(String.format("User with ID = %d did not like the film with ID = %d", userId, filmId));
+            throw new NotFoundException(String.format("Лайк отсутствует", userId, filmId));
         }
 
         film.getLikedUsers().remove(userId);
-        log.info("User with ID = {} unliked the film with ID = {}", userId, filmId);
+        log.info("Пользователь с ID = {} удалил лайк фильму с ID = {}", userId, filmId);
     }
 
     @Override
     public List<Film> getTopFilms(int count) {
-        log.info("Getting top-{} films by number of likes", count);
+        log.info("Топ фильмов", count);
         return films.values().stream()
                 .sorted(Comparator.comparingInt(f -> -f.getLikedUsers().size()))
                 .limit(count)
