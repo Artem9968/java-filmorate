@@ -20,6 +20,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -79,7 +80,7 @@ public class FilmController {
 
     //получение топа фильмов
     @GetMapping("/popular")
-    public Collection<Film> getTopFilms(@RequestParam(defaultValue = "3") int count) {
+    public List<Film> getTopFilms(@RequestParam(defaultValue = "3") int count) {
         return filmService.getTopFilms(count);
     }
 }

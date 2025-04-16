@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface UserStorage {
 
@@ -17,9 +18,9 @@ public interface UserStorage {
 
     User removeFriend(Long userId, Long friendId) throws NotFoundException;
 
-    Collection<User> getCommonFriends(Long userId, Long otherUserId) throws NotFoundException;
+    List<User> getCommonFriends(Long userId, Long otherUserId) throws NotFoundException;
 
     User findById(Long id) throws NotFoundException;
 
-    Collection<User> getFriends(Long id) throws NotFoundException;
+    List<User> getFriends(Long id) throws NotFoundException;
 }

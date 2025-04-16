@@ -30,11 +30,11 @@ public class FilmControllerTest {
         // Создаем мок для UserStorage
         UserStorage userStorage = Mockito.mock(UserStorage.class);
 
-        // Создаем экземпляр хранилища фильмов, передавая мок UserStorage
-        FilmStorage filmStorage = new InMemoryFilmStorage(userStorage);
+        // Создаем экземпляр хранилища фильмов
+        FilmStorage filmStorage = new InMemoryFilmStorage();
 
-        // Создаем экземпляр сервиса, передавая ему хранилище
-        FilmService filmService = new FilmService(filmStorage);
+        // Создаем экземпляр сервиса, передавая ему хранилище и мок UserStorage
+        FilmService filmService = new FilmService(filmStorage, userStorage);
 
         // Создаем контроллер, передавая ему сервис
         filmController = new FilmController(filmService);
