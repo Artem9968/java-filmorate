@@ -1,11 +1,15 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -13,27 +17,62 @@ import java.time.format.DateTimeFormatter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-
 public class FilmControllerTest {
 
-    public static FilmController filmController = new FilmController(new FilmService());
-    Film film = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film1 = Film.of(Long.parseLong("0"), "ко65", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film2 = Film.of(Long.parseLong("0"), "name", "descripti", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film3 = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("1990-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film4 = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 1);
-    static Film film5 = Film.of(Long.parseLong("0"), "name111", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film6 = Film.of(Long.parseLong("1"), " ", "description ", LocalDate.parse("2029-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film7 = Film.of(Long.parseLong("1"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
+    private static FilmController filmController;
+    private static Film film1;
+    private static Film film2;
+    private static Film film3;
+    private static Film film4;
 
     @BeforeAll
-    public static void start() throws ValidationException, NotFoundException {
-        filmController.createFilm(film5);
+    public static void start() throws ValidationException {
+        // Создаем мок для UserStorage
+        UserStorage userStorage = Mockito.mock(UserStorage.class);
+
+        // Создаем экземпляр хранилища фильмов
+        FilmStorage filmStorage = new InMemoryFilmStorage();
+
+        // Создаем экземпляр сервиса, передавая ему хранилище и мок UserStorage
+        FilmService filmService = new FilmService(filmStorage, userStorage);
+
+        // Создаем контроллер, передавая ему сервис
+        filmController = new FilmController(filmService);
+
+        film1 = new Film();
+        film2 = new Film();
+        film3 = new Film();
+        film4 = new Film();
+
+        film1.setId(0L);
+        film1.setName("Фильм");
+        film1.setDescription("Описание");
+        film1.setReleaseDate(LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        film1.setDuration(100);
+
+        film2.setId(Long.parseLong("0"));
+        film2.setName("Фильм");
+        film2.setDescription("description ");
+        film2.setReleaseDate(LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        film2.setDuration(100);
+
+        film3.setId(Long.parseLong("1"));
+        film3.setName("Фильм");
+        film3.setDescription("Описание");
+        film3.setReleaseDate(LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        film3.setDuration(100);
+        filmController.createFilm(film3);
+
+        film4.setId(0L);
+        film4.setName("name");
+        film4.setDescription("description ");
+        film4.setReleaseDate(LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        film4.setDuration(100);
     }
 
     @Test
     public void testValidate() throws ValidationException, NotFoundException {
-        assertEquals(filmController.createFilm(film), film);
+        assertEquals(filmController.createFilm(film1), film1);
     }
 
     @Test
@@ -58,12 +97,12 @@ public class FilmControllerTest {
 
     @Test
     public void testNoId() {
-        assertEquals(filmController.update(film6), film6);
+        assertEquals(filmController.update(film1), film1);
     }
 
     @Test
     public void testWrongId() throws ValidationException, NotFoundException {
-        filmController.update(film7);
+        filmController.update(film3);
     }
 
     @Test
