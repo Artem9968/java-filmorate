@@ -1,25 +1,18 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Buffer;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmResponse;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface FilmStorage {
 
-    Collection<Film> getAllFilms();
+    List<Film> findAll();
 
-    Film findById(Long id) throws NotFoundException;
+    FilmResponse findById(Long id);
 
-    Film createFilm(Film film);
+    FilmResponse create(Buffer film);
 
-    Film update(Film film) throws NotFoundException;
-
-    void addLike(Long filmId, Long userId) throws NotFoundException;
-
-    void removeLike(Long filmId, Long userId) throws NotFoundException;
-
-    List<Film> getTopFilms(int count);
+    FilmResponse update(Buffer newFilm);
 }

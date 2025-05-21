@@ -1,94 +1,119 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
-import ru.yandex.practicum.filmorate.exceptions.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exceptions.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.FriendsExtractor;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Service
-@Slf4j
+@Slf4j(topic = "TRACE")
+@RequiredArgsConstructor
 public class UserService {
 
+    //sQL-запросы
+    private static final String SQL_SELECT_FRIENDS = "select userId, friendId from friends";
+    private static final String SQL_INSERT_FRIEND = "insert into friends(userId, friendId) values (?, ?)";
+    private static final String SQL_DELETE_FRIEND = "delete from friends where userId = ? and friendId = ?";
+
+    //сообщения для логирования и исключений
+    private static final String LOG_POST_REQUEST = "Обработка Post-запроса...";
+    private static final String LOG_DELETE_REQUEST = "Обработка Del-запроса...";
+    private static final String LOG_GET_REQUEST = "Обработка Get-запроса...";
+    private static final String ERROR_FRIEND_ALREADY_ADDED = "Пользователь с id %d уже добавлен в друзья";
+    private static final String ERROR_USER_NOT_FOUND = "Пользователь с данным идентификатором отсутствует в базе";
+
     private final UserStorage userStorage;
+    private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    public User addFriend(Long idUser, Long idFriend) {
+        log.info(LOG_POST_REQUEST);
 
-    public Collection<User> findAll() {
-        return userStorage.findAll();
-    }
+        validateUserExists(idUser);
+        validateUserExists(idFriend);
 
-    public User create(User user) throws ValidationException, DuplicatedDataException {
-
-        validateEmail(user.getEmail());
-        validateLogin(user.getLogin());
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        validateBirthday(user.getBirthday());
-        return userStorage.create(user);
-    }
-
-    public User update(User newUser) throws NotFoundException, ValidationException {
-        if (newUser.getId() == null) {
-            throw new ValidationException("Id должен присутствовать");
+        if (isFriend(idUser, idFriend)) {
+            logAndThrowConditionsNotMetException(String.format(ERROR_FRIEND_ALREADY_ADDED, idFriend));
         }
 
-        return userStorage.update(newUser);
+        jdbcTemplate.update(SQL_INSERT_FRIEND, idUser, idFriend);
+        return userStorage.findById(idUser);
     }
 
-    public User findById(Long id) throws NotFoundException, ValidationException {
-        if (id == null) {
-            throw new ValidationException("Id должен присутствовать");
+    public User delFriend(Long idUser, Long idFriend) {
+        log.info(LOG_DELETE_REQUEST);
+
+        validateUserExists(idUser);
+        validateUserExists(idFriend);
+
+        jdbcTemplate.update(SQL_DELETE_FRIEND, idUser, idFriend);
+        return userStorage.findById(idUser);
+    }
+
+    public Set<User> findJointFriends(Long idUser, Long idFriend) {
+        log.info(LOG_GET_REQUEST);
+
+        validateUserExists(idUser);
+        validateUserExists(idFriend);
+
+        String sqlSelectJointFriends = "SELECT f1.friendId AS jointFriendId " +
+                "FROM friends f1 " +
+                "JOIN friends f2 ON f1.friendId = f2.friendId " +
+                "WHERE f1.userId = ? AND f2.userId = ?";
+
+        Set<Long> jointFriendIds = new HashSet<>(jdbcTemplate.queryForList(
+                sqlSelectJointFriends, Long.class, idUser, idFriend));
+
+        Set<User> result = new HashSet<>();
+        for (Long friendId : jointFriendIds) {
+            result.add(userStorage.findById(friendId));
         }
-        return userStorage.findById(id);
+        return result;
     }
 
-    public void addFriend(Long userId, Long friendId) throws NotFoundException {
-        userStorage.addFriend(userId, friendId);
+    public Set<User> findAllFriends(Long idUser) {
+        log.info(LOG_GET_REQUEST);
+
+        validateUserExists(idUser);
+
+        Map<Long, Set<Long>> friends = jdbcTemplate.query(SQL_SELECT_FRIENDS, new FriendsExtractor());
+        assert friends != null;
+        Set<Long> userFriends = friends.getOrDefault(idUser, new HashSet<>());
+
+        Set<User> result = new HashSet<>();
+        for (Long friendId : userFriends) {
+            result.add(userStorage.findById(friendId));
+        }
+        return result;
     }
 
-    public void removeFriend(Long userId, Long friendId) throws NotFoundException {
-        userStorage.removeFriend(userId, friendId);
-    }
-
-    public List<User> getFriends(Long id) throws NotFoundException {
-        return userStorage.getFriends(id);
-    }
-
-    public List<User> getCommonFriends(Long userId, Long otherUserId) throws NotFoundException {
-        return userStorage.getCommonFriends(userId, otherUserId);
-    }
-
-    private void validateEmail(String email) {
-        if (email == null || email.isBlank() || !email.contains("@") || email.contains(" ") || email.length() == 1) {
-            throw new ValidationException("Неверный формат электронной почты");
+    private void validateUserExists(Long userId) {
+        if (userStorage.findById(userId) == null) {
+            logAndThrowNotFoundException(userId.toString());
         }
     }
 
-    private void validateLogin(String login) {
-        if (login == null || login.contains(" ") || login.isBlank()) {
-            throw new ValidationException("Логин не должен быть пустым или состоять из пробелов");
-        }
+    private boolean isFriend(Long idUser, Long idFriend) {
+        Map<Long, Set<Long>> friends = jdbcTemplate.query(SQL_SELECT_FRIENDS, new FriendsExtractor());
+        assert friends != null;
+        return friends.getOrDefault(idUser, new HashSet<>()).contains(idFriend);
     }
 
-    private void validateBirthday(LocalDate birthday) {
-        if (birthday == null) {
-            throw new ValidationException("Дата рождения должна быть указана");
-        }
-        if (birthday.isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не должна быть из будущего");
-        }
+    private void logAndThrowConditionsNotMetException(String message) {
+        log.error("Exception", new ConditionsNotMetException(message));
+        throw new ConditionsNotMetException(message);
+    }
+
+    private void logAndThrowNotFoundException(String value) {
+        log.error("Exception", new NotFoundException(UserService.ERROR_USER_NOT_FOUND));
+        throw new NotFoundException(UserService.ERROR_USER_NOT_FOUND);
     }
 }
