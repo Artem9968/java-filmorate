@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controller;
+package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.Valid;
@@ -76,12 +76,8 @@ public class FilmController {
         return filmService.viewRating(count);
     }
 
-    /**
-     * преобразует json объект в объект Buffer
-     *
-     * @param objectNode json объект
-     * @return объект Buffer
-     */
+    // преобразует json объект в объект Buffer, return объект Buffer
+
     private Buffer parseObjectNodeToBuffer(ObjectNode objectNode) {
         Long id = objectNode.has("id") ? objectNode.get("id").asLong() : 0L;
         String name = objectNode.get("name").asText();
@@ -102,12 +98,8 @@ public class FilmController {
         );
     }
 
-    /**
-     * извлекает список жанров из json объекта
-     *
-     * @param objectNode json объект
-     * @return список жанров
-     */
+    // извлекает список жанров из json объекта , return список жанров
+
     private List<String> extractGenresFromObjectNode(ObjectNode objectNode) {
         try {
             return objectNode.get("genres").findValuesAsText("id");

@@ -30,7 +30,7 @@ public class Film {
 
     @NotNull(message = "Дата релиза не может быть null")
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @PastOrPresent(message = "Дата релиза должна быть не раньше 28 декабря 1895 года")
+    @PastOrPresent
     private LocalDate releaseDate;
 
     @NotNull(message = "Продолжительность не может быть null")
