@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.genre;
 
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -11,9 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-
 @Component
-
 public class GenreDbStorage implements GenreStorage {
 
     private final JdbcTemplate jdbcTemplate;
@@ -24,13 +21,13 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public List<Genre> findAll() {
-        String sql = "select * from genres order by id";
+        String sql = "SELECT * FROM genre ORDER BY id"; // изменено с genres на genre
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsGenre(rs));
     }
 
     @Override
     public Genre findById(Integer id) {
-        String sql = "select * from genres where id = ?";
+        String sql = "SELECT * FROM genre WHERE id = ?"; // изменено с genres на genre
 
         List<Genre> genreCollection = jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsGenre(rs), id);
         if (genreCollection.size() == 1) {
@@ -42,10 +39,7 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public boolean deleteById(Integer id) {
-        String sqlQuery = "delete from friendships where user_id = ? or friend_id = ?";
-        jdbcTemplate.update(sqlQuery, id);
-
-        sqlQuery = "delete from genres where id = ?";
+        String sqlQuery = "DELETE FROM genre WHERE id = ?"; // изменено с genres на genre
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
 
@@ -55,3 +49,4 @@ public class GenreDbStorage implements GenreStorage {
         return new Genre(genreId, genreName);
     }
 }
+

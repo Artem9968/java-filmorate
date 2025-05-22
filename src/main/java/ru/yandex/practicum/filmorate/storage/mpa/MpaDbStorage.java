@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.mpa;
 
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
@@ -23,13 +22,13 @@ public class MpaDbStorage implements MpaStorage {
 
     @Override
     public List<Mpa> findAll() {
-        String sql = "select * from mpa order by id";
+        String sql = "SELECT id, rating AS name FROM filmrating ORDER BY id"; // изменено: mpa → filmrating, rating AS name
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsMpa(rs));
     }
 
     @Override
     public Mpa findById(Long id) {
-        String sql = "select * from mpa where id = ?";
+        String sql = "SELECT id, rating AS name FROM filmrating WHERE id = ?"; // изменено: mpa → filmrating, rating AS name
 
         List<Mpa> mpaCollection = jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsMpa(rs), id);
         if (mpaCollection.size() == 1) {
@@ -41,18 +40,17 @@ public class MpaDbStorage implements MpaStorage {
 
     @Override
     public boolean deleteById(Integer id) {
-        String sqlQuery = "update films set " +
-                "mpa_id = null " +
-                "where mpa_id = ?";
+        String sqlQuery = "UPDATE film SET ratingId = NULL WHERE ratingId = ?"; // изменено: films → film, mpa_id → ratingId
         jdbcTemplate.update(sqlQuery, id);
 
-        sqlQuery = "delete from mpa where id = ?";
+        sqlQuery = "DELETE FROM filmrating WHERE id = ?"; // изменено: mpa → filmrating
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
 
     private Mpa makeFilmsMpa(ResultSet rs) throws SQLException {
         Long mpaId = rs.getLong("id");
-        String mpaName = rs.getString("name");
+        String mpaName = rs.getString("name"); // name теперь соответствует псевдониму rating
         return new Mpa(mpaId, mpaName);
     }
 }
+
