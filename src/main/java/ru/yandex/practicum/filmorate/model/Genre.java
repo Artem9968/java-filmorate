@@ -6,8 +6,8 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(of = {"id"})
-@AllArgsConstructor(staticName = "of")
+@AllArgsConstructor
 public class Genre {
-    private Long id;
+    private Integer id;
     private String name;
 }

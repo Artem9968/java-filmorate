@@ -1,110 +1,71 @@
 package ru.yandex.practicum.filmorate;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.Buffer;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.FilmResponse;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 
 @RestController
+@Slf4j
+@RequiredArgsConstructor
+
 @RequestMapping("/films")
 public class FilmController {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final String DEFAULT_GENRE = "нет жанра";
-
-  //  private final FilmStorage filmStorage;
-  //  private final UserStorage userStorage;
     private final FilmService filmService;
 
-    @Autowired
-    public FilmController(
-            FilmStorage filmStorage,
-            UserStorage userStorage,
-            FilmService filmInterface
-    ) {
-     //   this.filmStorage = filmStorage;
-     //   this.userStorage = userStorage;
-        this.filmService = filmInterface;
-    }
-
     @GetMapping
-    public List<Film> findAll() {
-        return filmService.findAllFilms();
+    public Collection<Film> findAll() {
+        log.info("GET /film");
+        return filmService.findAll();
     }
 
     @GetMapping("/{id}")
-    public FilmResponse findById(@PathVariable("id") Long id) {
-        return filmService.findFilmById(id);
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public FilmResponse create(@Valid @RequestBody Film filmRequest) {
-        return filmService.createFilm(filmRequest);
-    }
-
-    @PutMapping
-    public FilmResponse update(@Valid @RequestBody Film filmRequest) {
-        return filmService.updateFilm(filmRequest);
-    }
-
-    @PutMapping("/{id}/like/{userId}")
-    public FilmResponse addLike(@Valid @PathVariable("id") Long id, @PathVariable("userId") Long userId) {
-        return filmService.addLike(userId, id);
-    }
-
-    @DeleteMapping("/{id}/like/{userId}")
-    public FilmResponse delLike(@Valid @PathVariable("id") Long id, @PathVariable("userId") Long userId) {
-        return filmService.delLike(userId, id);
+    public Film findById(@PathVariable("id") Long id) {
+        return filmService.findById(id);
     }
 
     @GetMapping("/popular")
-    public Set<FilmResponse> viewRating(@RequestParam(defaultValue = "10") Long count) {
-        return filmService.viewRating(count);
+    public List<Film> getTopFilms(@RequestParam(defaultValue = "10") int count) {
+        return filmService.getTop(count);
     }
 
-    // преобразует json объект в объект Buffer, return объект Buffer
-
-    private Buffer parseObjectNodeToBuffer(ObjectNode objectNode) {
-        Long id = objectNode.has("id") ? objectNode.get("id").asLong() : 0L;
-        String name = objectNode.get("name").asText();
-        String description = objectNode.get("description").asText();
-        String releaseDate = objectNode.get("releaseDate").asText();
-        Integer duration = objectNode.get("duration").asInt();
-        List<String> mpa = objectNode.get("mpa").findValuesAsText("id");
-        List<String> genres = extractGenresFromObjectNode(objectNode);
-
-        return Buffer.of(
-                id,
-                name,
-                description,
-                LocalDate.parse(releaseDate, DATE_FORMATTER),
-                duration,
-                genres,
-                Long.valueOf(mpa.get(0))
-        );
+    @PostMapping
+    public Film create(@RequestBody Film film) {
+        log.info("POST /film/{}", film.getName());
+        return filmService.createFilm(film); //вернуть если ничего не поменяется
     }
 
-    // извлекает список жанров из json объекта , return список жанров
-
-    private List<String> extractGenresFromObjectNode(ObjectNode objectNode) {
-        try {
-            return objectNode.get("genres").findValuesAsText("id");
-        } catch (NullPointerException e) {
-            return List.of(DEFAULT_GENRE);
-        }
+    @PutMapping
+    public Film update(@RequestBody Film film) {
+        log.info("PUT /film/{}", film.getName());
+        return filmService.updateFilm(film);
     }
+
+    @PutMapping("/{id}/like/{user-id}")
+    public Film addLike(@PathVariable Integer id, @PathVariable("user-id") Long idUser) {
+        return filmService.addLike(id, idUser);
+    }
+
+    @DeleteMapping("/{id}")
+    public Film delete(
+            @PathVariable Integer id
+    ) {
+        return filmService.deleteById(Long.valueOf(id));
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public Film deleteLike(
+            @PathVariable("id") Long id,
+            @PathVariable("userId") Long userId
+    ) {
+        return filmService.deleteLike(id, userId);
+    }
+
 }

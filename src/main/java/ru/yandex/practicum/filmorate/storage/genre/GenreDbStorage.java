@@ -1,35 +1,60 @@
 package ru.yandex.practicum.filmorate.storage.genre;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-@Repository
+@Component
+
 public class GenreDbStorage implements GenreStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
     public GenreDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Genre getGenreById(Long id) {
-        String sql = "SELECT id, name FROM genre WHERE id = ?";
-        try {
-            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> Genre.of(rs.getLong("id"), rs.getString("name")), id);
-        } catch (DataAccessException e) {
-            throw new NotFoundException("Genre with id " + id + " not found");
+    @Override
+    public List<Genre> findAll() {
+        String sql = "select * from genres order by id";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsGenre(rs));
+    }
+
+    @Override
+    public Genre findById(Integer id) {
+        String sql = "select * from genres where id = ?";
+
+        List<Genre> genreCollection = jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsGenre(rs), id);
+        if (genreCollection.size() == 1) {
+            return genreCollection.get(0);
+        } else {
+            throw new NotFoundException(String.format("genre с id-%d не существует.", id));
         }
     }
 
-    public List<Genre> getAllGenres() {
-        String sql = "SELECT id, name FROM genre";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> Genre.of(rs.getLong("id"), rs.getString("name")));
+    @Override
+    public boolean deleteById(Integer id) {
+        String sqlQuery = "delete from friendships where user_id = ? or friend_id = ?";
+        jdbcTemplate.update(sqlQuery, id);
+
+        sqlQuery = "delete from genres where id = ?";
+        return jdbcTemplate.update(sqlQuery, id) > 0;
+    }
+
+    private Genre makeFilmsGenre(ResultSet rs) throws SQLException {
+        Integer genreId = rs.getInt("id");
+        String genreName = rs.getString("name");
+        return new Genre(genreId, genreName);
     }
 }

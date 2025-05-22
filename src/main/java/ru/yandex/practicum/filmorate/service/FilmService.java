@@ -2,99 +2,134 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.model.FilmResponse;
-import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
 @Slf4j(topic = "TRACE")
 @RequiredArgsConstructor
 public class FilmService {
-
-    private final UserStorage userStorage;
     private final FilmStorage filmStorage;
-    private final JdbcTemplate jdbcTemplate;
+    private final UserStorage userStorage;
+    private final MpaService mpaService;
+    private final GenreService genreService;
 
-    // SQL-запросы
-    private final String selectLikedUsersQuery = "select filmId, userId from likedUsers";
-    private final String insertLikeQuery = "insert into likedUsers(filmId, userId) values (?, ?)";
-    private final String selectFilmGenresQuery = "select filmId, genreId from filmGenre where filmId = ?";
-    private final String deleteLikeQuery = "delete from likedUsers where filmId = ? and userId = ?";
-    private final String selectTopFilmsQuery = "select f.id as name, COUNT(l.userId) as coun from likedUsers as l LEFT OUTER JOIN film AS f ON l.filmId = f.id GROUP BY f.name ORDER BY COUNT(l.userId) DESC LIMIT 10";
-
-
-
-    public FilmResponse addLike(Long idUser, Long idFilm) {
-        if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
-            Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(selectLikedUsersQuery, new FilmDbStorage.LikedUsersExtractor());
-            if (likedUsers.get(idFilm) != null && likedUsers.get(idFilm).contains(idUser)) {
-                log.error("Пользователь с ID {} уже поставил лайк фильму с ID {}", idUser, idFilm);
-                throw new ConditionsNotMetException("Пользователь с ID " + idUser + " уже поставил лайк фильму с ID " + idFilm);
-            } else {
-                jdbcTemplate.update(insertLikeQuery, idFilm, idUser);
-            }
-        }
-        FilmResponse film = filmStorage.findById(idFilm);
-        LinkedHashSet genres = new LinkedHashSet<>();
-        Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(selectFilmGenresQuery, new FilmDbStorage.FilmGenreExtractor(), film.getId());
-        if (!filmGenre.isEmpty()) {
-            for (Long g : filmGenre.get(film.getId()))
-                genres.add(g);
-        }
-        return FilmResponse.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), film.getMpa(), genres);
+    public Collection<Film> findAll() {
+        return filmStorage.findAll();
     }
 
-
-    public FilmResponse delLike(Long idUser, Long idFilm) {
-
-        if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
-            Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(selectLikedUsersQuery, new FilmDbStorage.LikedUsersExtractor());
-            if (likedUsers.get(idFilm) != null && !likedUsers.get(idFilm).contains(idUser)) {
-                log.error("Пользователь с ID {} не ставил лайк фильму с ID {}", idUser, idFilm);
-                throw new ConditionsNotMetException("Пользователь с ID " + idUser + " не ставил лайк фильму с ID " + idFilm);
-            } else {
-                jdbcTemplate.update(deleteLikeQuery, idFilm, idUser);
-            }
-        }
-        FilmResponse film = filmStorage.findById(idFilm);
-        LinkedHashSet genres = new LinkedHashSet<>();
-        Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(selectFilmGenresQuery, new FilmDbStorage.FilmGenreExtractor(), film.getId());
-        if (!filmGenre.isEmpty()) {
-            for (Long g : filmGenre.get(film.getId()))
-                genres.add(g);
-        }
-        return FilmResponse.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), film.getMpa(), genres);
+    public Film findById(Long id) {
+        return filmStorage.findById(id);
     }
 
-    public LinkedHashSet<FilmResponse> viewRating(Long count) {
+    public Film createFilm(Film film) {
+        validateFilm(film);
+        return filmStorage.create(film);
+    }
 
-        LinkedHashMap<Long, Long> likedUsers = jdbcTemplate.query(selectTopFilmsQuery, new TopLikedUsersExtractor());
-        LinkedHashSet<FilmResponse> films = new LinkedHashSet<>();
-        if (likedUsers == null) {
-            log.error("Список фильмов с рейтингом пуст.");
-            throw new NotFoundException("Список фильмов с рейтингом пуст.");
-        } else {
-            LinkedHashSet genres = new LinkedHashSet<>();
-            for (Long l : likedUsers.keySet()) {
-                Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(selectFilmGenresQuery, new FilmDbStorage.FilmGenreExtractor(), filmStorage.findById(l).getId());
-                if (!filmGenre.isEmpty()) {
-                    for (Long g : filmGenre.get(filmStorage.findById(l).getId()))
-                        genres.add(g);
+    public Film updateFilm(Film film) {
+        if (filmStorage.findById(film.getId()) != null) {
+            validateFilm(film);
+            return filmStorage.update(film);
+        }
+        throw new NotFoundException("Пост с id = " + film.getId() + " не найден");
+
+    }
+
+    public Film addLike(Integer idFilm, Long idUser) {
+        User user = userStorage.findById(idUser);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id = " + idUser + " не найден");
+        }
+        Film film;
+        try {
+            film = filmStorage.findById(Long.valueOf(idFilm));
+            if (film == null) {
+                throw new NotFoundException("Фильм с id = " + idFilm + " не найден");
+            }
+        } catch (Exception e) {
+            throw new NotFoundException("Фильм не найден");
+        }
+       // if (user.getLikedFilms().contains(idFilm)) {
+      //      throw new DuplicatedDataException("Пользователь " + user.getName() + " уже ставил лайк фильму " + film.getName());
+     //   }
+        Set<Long> filmLikesId = film.getLikes();
+        filmLikesId.add(idUser);
+        film.setLikes(filmLikesId);
+        return filmStorage.update(film);
+    }
+
+    public Film deleteById(Long id) {
+        Film film = filmStorage.findById(id);
+        filmStorage.deleteById(id);
+        return film;
+    }
+
+    public Film deleteLike(Long idFilm, Long idUser) {
+        User user = userStorage.findById(idUser);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id = " + idUser + " не найден");
+        }
+        Film film = filmStorage.findById(idFilm);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id = " + idFilm + " не найден");
+        }
+//        if (user.getLikedFilms().contains(idFilm)) {
+//            Set<Integer> filmLikesId = film.getLikes();
+//            filmLikesId.remove(idUser);
+//            film.setLikes(filmLikesId);
+//            return film;
+//        }
+        return film;
+    }
+
+    public List<Film> getTop(Integer count) {
+        return filmStorage
+                .findAll()
+                .stream()
+                .sorted(this::compare)
+                .limit(count)
+                .collect(Collectors.toList());
+    }
+
+    private int compare(Film p0, Film p1) {
+        return p1.getLikes().size() - p0.getLikes().size(); //прямой порядок сортировки
+    }
+
+    private void validateFilm(Film film) {
+        if (film.getName().isBlank()) {
+            throw new ValidationException("Название фильма не может быть пустым");
+        }
+        if (film.getDescription().length() > 200) {
+            throw new ValidationException("Длина описания превышает 200 символов");
+        }
+        if (film.getDuration() <= 0) {
+            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
+        }
+        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("дата релиза — не раньше 28 декабря 1895 года;");
+        }
+        if (mpaService.findById(film.getMpa().getId()) == null) throw new NotFoundException("Mpa not found");
+        if (film.getGenres() != null) {
+            for (Genre genre : film.getGenres()) {
+                if (genreService.findById(genre.getId()) == null) {
+                    throw new ValidationException("Genre not found");
                 }
-                films.add(FilmResponse.of(filmStorage.findById(l).getId(), filmStorage.findById(l).getName(), filmStorage.findById(l).getDescription(), filmStorage.findById(l).getReleaseDate(), filmStorage.findById(l).getDuration(), new HashSet<>(), filmStorage.findById(l).getMpa(), genres));
             }
         }
-        return films;
     }
+
 }

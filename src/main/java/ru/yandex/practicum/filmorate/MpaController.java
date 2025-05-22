@@ -1,30 +1,35 @@
 package ru.yandex.practicum.filmorate;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.MpaService;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
+import java.util.Collection;
 import java.util.List;
 
 @RestController
 @RequestMapping("/mpa")
 @RequiredArgsConstructor
+@Slf4j
+@Validated
 public class MpaController {
-
     private final MpaService mpaService;
 
-     // получить рейтинг mpa по его идентификатору и return объект рейтинга mpa
-
-    @GetMapping("/{id}")
-    public Mpa getMpaById(@PathVariable Long id) {
-        return mpaService.getMpaById(id);
-    }
-
-    // получить список всех рейтингов mpa и return список всех рейтингов mpa
 
     @GetMapping
-    public List<Mpa> getAllMpa() {
-        return mpaService.getAllMpa();
+    public Collection<Mpa> findAll() {
+        return mpaService.findAll();
     }
+
+    @GetMapping("/{id}")
+    public Mpa findById(@PathVariable Integer id) {
+        return mpaService.findById(id);
+    }
+
+
 }
