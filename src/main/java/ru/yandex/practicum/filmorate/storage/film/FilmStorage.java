@@ -3,8 +3,6 @@ package ru.yandex.practicum.filmorate.storage.film;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 public interface FilmStorage {
     public Collection<Film> findAll();
