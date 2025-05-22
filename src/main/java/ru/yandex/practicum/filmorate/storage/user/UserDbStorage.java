@@ -80,35 +80,40 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User create(@Valid User user) {
         log.info("Обработка Create-запроса...");
-
+        validateUser(user);
         duplicateCheck(user);
 
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("users")
+                .usingGeneratedKeyColumns("id");
+
+        Map<String, Object> values = new HashMap<>();
+        values.put("name", user.getName());
+        values.put("email", user.getEmail());
+        values.put("login", user.getLogin());
+        values.put("birthday", user.getBirthday());
+
+        Long id = simpleJdbcInsert.executeAndReturnKey(values).longValue();
+        user.setId(id);
+        return user;
+    }
+
+    private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @");
         }
-
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
             throw new ValidationException("Логин не может быть пустым и содержать пробелы");
         }
-
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-
         if (user.getBirthday() == null) {
             throw new ValidationException("Дата рождения не может быть нулевой");
         }
         if (user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
-                .withTableName("users")
-                .usingGeneratedKeyColumns("id");
-        Long id = simpleJdbcInsert.executeAndReturnKey(user.toMapUser()).longValue();
-        user.setId(id);
-
-        return user;
     }
 
     private void duplicateCheck(User user) {

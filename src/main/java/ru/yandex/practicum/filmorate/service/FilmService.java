@@ -11,7 +11,11 @@ import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
 
 @Service
 @Slf4j(topic = "TRACE")
@@ -30,8 +34,8 @@ public class FilmService {
     private final String selectTopFilmsQuery = "select f.id as name, COUNT(l.userId) as coun from likedUsers as l LEFT OUTER JOIN film AS f ON l.filmId = f.id GROUP BY f.name ORDER BY COUNT(l.userId) DESC LIMIT 10";
 
 
+
     public FilmResponse addLike(Long idUser, Long idFilm) {
-        log.info("Обработка Post-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
             Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(selectLikedUsersQuery, new FilmDbStorage.LikedUsersExtractor());
             if (likedUsers.get(idFilm) != null && likedUsers.get(idFilm).contains(idUser)) {
@@ -53,7 +57,7 @@ public class FilmService {
 
 
     public FilmResponse delLike(Long idUser, Long idFilm) {
-        log.info("Обработка Del-запроса...");
+
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
             Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(selectLikedUsersQuery, new FilmDbStorage.LikedUsersExtractor());
             if (likedUsers.get(idFilm) != null && !likedUsers.get(idFilm).contains(idUser)) {
@@ -74,7 +78,7 @@ public class FilmService {
     }
 
     public LinkedHashSet<FilmResponse> viewRating(Long count) {
-        log.info("Обработка Get-запроса...");
+
         LinkedHashMap<Long, Long> likedUsers = jdbcTemplate.query(selectTopFilmsQuery, new TopLikedUsersExtractor());
         LinkedHashSet<FilmResponse> films = new LinkedHashSet<>();
         if (likedUsers == null) {

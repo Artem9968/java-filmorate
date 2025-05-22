@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.FriendsExtractor;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +34,27 @@ public class UserService {
 
     private final UserStorage userStorage;
     private final JdbcTemplate jdbcTemplate;
+
+    public Collection<User> findAllUsers() {
+        return userStorage.findAll();
+    }
+
+    public User findUserById(Long id) {
+        User user = userStorage.findById(id);
+        if (user == null) {
+            throw new NotFoundException("User not found with id: " + id);
+        }
+        return user;
+    }
+
+    public User createUser(User user) {
+        return userStorage.create(user);
+    }
+
+    public User updateUser(User user) {
+        validateUserExists(user.getId()); // Добавляем проверку
+        return userStorage.update(user);
+    }
 
     public User addFriend(Long idUser, Long idFriend) {
         log.info(LOG_POST_REQUEST);

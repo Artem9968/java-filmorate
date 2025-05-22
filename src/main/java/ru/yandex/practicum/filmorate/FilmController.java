@@ -14,7 +14,9 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
+
 
 @RestController
 @RequestMapping("/films")
@@ -23,8 +25,8 @@ public class FilmController {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final String DEFAULT_GENRE = "нет жанра";
 
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+  //  private final FilmStorage filmStorage;
+  //  private final UserStorage userStorage;
     private final FilmService filmService;
 
     @Autowired
@@ -33,32 +35,30 @@ public class FilmController {
             UserStorage userStorage,
             FilmService filmInterface
     ) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+     //   this.filmStorage = filmStorage;
+     //   this.userStorage = userStorage;
         this.filmService = filmInterface;
     }
 
     @GetMapping
     public List<Film> findAll() {
-        return filmStorage.findAll();
+        return filmService.findAllFilms();
     }
 
     @GetMapping("/{id}")
     public FilmResponse findById(@PathVariable("id") Long id) {
-        return filmStorage.findById(id);
+        return filmService.findFilmById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FilmResponse create(@Valid @RequestBody ObjectNode objectNode) {
-        Buffer buffer = parseObjectNodeToBuffer(objectNode);
-        return filmStorage.create(buffer);
+    public FilmResponse create(@Valid @RequestBody Film filmRequest) {
+        return filmService.createFilm(filmRequest);
     }
 
     @PutMapping
-    public FilmResponse update(@Valid @RequestBody ObjectNode objectNode) {
-        Buffer buffer = parseObjectNodeToBuffer(objectNode);
-        return filmStorage.update(buffer);
+    public FilmResponse update(@Valid @RequestBody Film filmRequest) {
+        return filmService.updateFilm(filmRequest);
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -72,7 +72,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public LinkedHashSet<FilmResponse> viewRating(@RequestParam(defaultValue = "10") Long count) {
+    public Set<FilmResponse> viewRating(@RequestParam(defaultValue = "10") Long count) {
         return filmService.viewRating(count);
     }
 

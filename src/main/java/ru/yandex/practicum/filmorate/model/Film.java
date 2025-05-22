@@ -45,5 +45,5 @@ public class Film {
     @Max(value = 5, message = "Рейтинг MPA должен быть не больше 5")
     private Long mpa;
 
-    private LinkedHashSet<Long> genres;
+    private Set<Long> genres;
 }

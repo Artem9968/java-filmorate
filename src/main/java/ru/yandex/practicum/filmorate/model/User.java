@@ -30,13 +30,4 @@ public class User {
     @JsonIgnore
     private Set<Long> friendRequests;
 
-    public Map<String, Object> toMapUser() {
-        Map<String, Object> values = new HashMap<>();
-        values.put("id", id);
-        values.put("name", name);
-        values.put("email", email);
-        values.put("login", login);
-        values.put("birthday", birthday);
-        return values;
-    }
 }

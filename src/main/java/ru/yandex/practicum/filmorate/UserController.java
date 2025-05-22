@@ -21,21 +21,20 @@ public class UserController {
     private static final String FRIEND_ID_PATH = FRIENDS_PATH + "/{friendId}";
     private static final String COMMON_FRIENDS_PATH = USER_ID_PATH + "/friends/common/{otherId}";
 
-    private final UserStorage userStorage;
-    private final UserService userService;
+        private final UserService userService;
 
     // получить список всех пользователей и return список всех пользователей
 
     @GetMapping
     public Collection<User> findAll() {
-        return userStorage.findAll();
+        return userService.findAllUsers();
     }
 
     //получить пользователя по его ид и return объект пользователя
 
     @GetMapping(USER_ID_PATH)
-    public User findById(@PathVariable("id") Long id) {
-        return userStorage.findById(id);
+    public User findById(@PathVariable Long id) {
+        return userService.findUserById(id);
     }
 
 
@@ -44,14 +43,14 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody User user) {
-        return userStorage.create(user);
+        return userService.createUser(user);
     }
 
         // обновить данные пользователя и return обновленный пользователь
 
     @PutMapping
-    public User update(@Valid @RequestBody User newUser) {
-        return userStorage.update(newUser);
+    public User update(@Valid @RequestBody User user) {
+        return userService.updateUser(user);
     }
 
 
