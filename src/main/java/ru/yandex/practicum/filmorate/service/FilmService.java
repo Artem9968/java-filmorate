@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private final MpaService mpaService;
+    private final MpaStorage mpaStorage;
     private final GenreService genreService;
 
     public Collection<Film> findAll() {
@@ -68,10 +69,8 @@ public class FilmService {
         return filmStorage.update(film);
     }
 
-    public Film deleteById(Long id) {
-        Film film = filmStorage.findById(id);
+    public void deleteById(Long id) {
         filmStorage.deleteById(id);
-        return film;
     }
 
     public Film deleteLike(Long idFilm, Long idUser) {
@@ -112,7 +111,7 @@ public class FilmService {
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidationException("дата релиза — не раньше 28 декабря 1895 года;");
         }
-        if (mpaService.findById(film.getMpa().getId()) == null) throw new NotFoundException("Mpa not found");
+        if (mpaStorage.findById(film.getMpa().getId()) == null) throw new NotFoundException("Mpa not found");
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (genreService.findById(genre.getId()) == null) {

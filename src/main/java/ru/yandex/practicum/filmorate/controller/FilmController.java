@@ -54,10 +54,7 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}")
-    public Film delete(
-            @PathVariable Integer id
-    ) {
-        return filmService.deleteById(Long.valueOf(id));
+    public void delete(@PathVariable Integer id) {
     }
 
     @DeleteMapping("/{id}/like/{userId}")
@@ -67,5 +64,4 @@ public class FilmController {
     ) {
         return filmService.deleteLike(id, userId);
     }
-
 }
