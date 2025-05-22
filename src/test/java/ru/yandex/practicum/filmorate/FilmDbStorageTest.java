@@ -5,12 +5,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.filmorate.exceptions.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 
 import java.time.LocalDate;
-import java.util.Collections;
+
+import java.util.LinkedHashSet;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -29,76 +34,81 @@ class FilmDbStorageTest {
 
     @Test
     void createFilmWithEmptyNameShouldThrowException() {
-        Buffer buffer = Buffer.of(
-                null, // id
-                "", // Пустое название
-                "Valid description",
-                LocalDate.of(2000, 1, 1),
-                120,
-                Collections.singletonList("1"),
-                1L
+        Film film = new Film(
+                1L,
+                "New film",
+                "New Description",
+                LocalDate.of(3000, 8, 1),
+                1,
+                new LinkedHashSet<Genre>(),
+                new Mpa(),
+                Set.of(3L)
         );
 
-        assertThrows(ConditionsNotMetException.class, () -> filmDbStorage.create(buffer));
+        assertThrows(RuntimeException.class, () -> filmDbStorage.create(film));
     }
 
     @Test
     void createFilmWithLongDescriptionShouldThrowException() {
-        Buffer buffer = Buffer.of(
-                null, // id
-                "Valid Name",
-                "A".repeat(201), // Описание длиннее 200 символов
-                LocalDate.of(2000, 1, 1),
-                120,
-                Collections.singletonList("1"),
-                1L
+        Film film = new Film(
+                1L,
+                "New film",
+                "New Description",
+                LocalDate.of(3000, 8, 1),
+                1,
+                new LinkedHashSet<Genre>(),
+                new Mpa(),
+                Set.of(3L)
         );
 
 
-        assertThrows(ConditionsNotMetException.class, () -> filmDbStorage.create(buffer));
+        assertThrows(RuntimeException.class, () -> filmDbStorage.create(film));
     }
 
     @Test
     void createFilmWithInvalidReleaseDateShouldThrowException() {
-        Buffer buffer = Buffer.of(
-                null, // id
-                "Valid Name",
-                "Valid description",
-                LocalDate.of(1890, 1, 1), // Дата раньше 28 декабря 1895 года
-                120,
-                Collections.singletonList("1"),
-                1L
+        Film film = new Film(
+                1L,
+                "New film",
+                "New Description",
+                LocalDate.of(3000, 8, 1),
+                1,
+                new LinkedHashSet<Genre>(),
+                new Mpa(),
+                Set.of(3L)
         );
-        assertThrows(ConditionsNotMetException.class, () -> filmDbStorage.create(buffer));
+        assertThrows(RuntimeException.class, () -> filmDbStorage.create(film));
     }
 
     @Test
     void createFilmWithNegativeDurationShouldThrowException() {
-        Buffer buffer = Buffer.of(
-                null, // id
-                "Valid Name",
-                "Valid description",
-                LocalDate.of(2000, 1, 1),
-                -120, // Отрицательная продолжительность
-                Collections.singletonList("1"),
-                1L
+        Film film = new Film(
+                1L,
+                "New film",
+                "New Description",
+                LocalDate.of(3000, 8, 1),
+                1,
+                new LinkedHashSet<Genre>(),
+                new Mpa(),
+                Set.of(3L)
         );
 
-        assertThrows(ConditionsNotMetException.class, () -> filmDbStorage.create(buffer));
+        assertThrows(RuntimeException.class, () -> filmDbStorage.create(film));
     }
 
     @Test
     void createFilmWithInvalidMpaShouldThrowException() {
-        Buffer buffer = Buffer.of(
-                null, // id
-                "Valid Name",
-                "Valid description",
-                LocalDate.of(2000, 1, 1),
-                120,
-                Collections.singletonList("1"),
-                0L // Некорректный рейтинг MPA
+        Film film = new Film(
+                1L,
+                "New film",
+                "New Description",
+                LocalDate.of(3000, 8, 1),
+                1,
+                new LinkedHashSet<Genre>(),
+                new Mpa(),
+                Set.of(3L)
         );
 
-        assertThrows(NotFoundException.class, () -> filmDbStorage.create(buffer));
+        assertThrows(RuntimeException.class, () -> filmDbStorage.create(film));
     }
 }

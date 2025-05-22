@@ -142,7 +142,7 @@ public class FilmDbStorage implements FilmStorage {
         Long id = rs.getLong("id");
         String name = rs.getString("name");
         String description = rs.getString("description");
-        Integer mpaId = rs.getInt("mpa_id");
+        Long mpaId = rs.getLong("mpa_id");
         String mpaName = rs.getString("mpa_name");
         LocalDate releaseDate = rs.getDate("releaseDate").toLocalDate();
         Integer duration = rs.getInt("duration");

@@ -28,7 +28,7 @@ public class MpaDbStorage implements MpaStorage {
     }
 
     @Override
-    public Mpa findById(Integer id) {
+    public Mpa findById(Long id) {
         String sql = "select * from mpa where id = ?";
 
         List<Mpa> mpaCollection = jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsMpa(rs), id);
@@ -51,7 +51,7 @@ public class MpaDbStorage implements MpaStorage {
     }
 
     private Mpa makeFilmsMpa(ResultSet rs) throws SQLException {
-        Integer mpaId = rs.getInt("id");
+        Long mpaId = rs.getLong("id");
         String mpaName = rs.getString("name");
         return new Mpa(mpaId, mpaName);
     }

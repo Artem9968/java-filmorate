@@ -9,7 +9,7 @@ import java.util.Collection;
 public interface MpaStorage {
     public Collection<Mpa> findAll();
 
-    public Mpa findById(Integer id);
+    public Mpa findById(Long id);
 
     public boolean deleteById(Integer id);
 
