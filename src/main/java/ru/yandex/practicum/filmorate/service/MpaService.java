@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
 import java.util.Collection;
 
-
 @Service
 @RequiredArgsConstructor
 

@@ -21,13 +21,13 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public List<Genre> findAll() {
-        String sql = "SELECT * FROM genre ORDER BY id"; // изменено с genres на genre
+        String sql = "SELECT * FROM genre ORDER BY id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsGenre(rs));
     }
 
     @Override
     public Genre findById(Integer id) {
-        String sql = "SELECT * FROM genre WHERE id = ?"; // изменено с genres на genre
+        String sql = "SELECT * FROM genre WHERE id = ?";
 
         List<Genre> genreCollection = jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsGenre(rs), id);
         if (genreCollection.size() == 1) {
@@ -39,7 +39,7 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public boolean deleteById(Integer id) {
-        String sqlQuery = "DELETE FROM genre WHERE id = ?"; // изменено с genres на genre
+        String sqlQuery = "DELETE FROM genre WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
 

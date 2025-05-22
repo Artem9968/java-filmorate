@@ -12,7 +12,11 @@ import ru.yandex.practicum.filmorate.model.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 
 @Primary
 @Component
@@ -32,7 +36,7 @@ public class FilmDbStorage implements FilmStorage {
         Map<String, Object> values = new HashMap<>();
         values.put("name", film.getName());
         values.put("description", film.getDescription());
-        values.put("ratingId", film.getMpa().getId()); // изменено с mpa_id на ratingId
+        values.put("ratingId", film.getMpa().getId());
         values.put("releaseDate", film.getReleaseDate());
         values.put("duration", film.getDuration());
 
@@ -43,7 +47,7 @@ public class FilmDbStorage implements FilmStorage {
         Integer filmId = simpleJdbcInsert.executeAndReturnKey(values).intValue();
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
-                String sqlQuery = "INSERT INTO filmGenre(filmId, genreId) " + // изменено с films_genres на filmGenre, поля filmId, genreId
+                String sqlQuery = "INSERT INTO filmGenre(filmId, genreId) " +
                         "VALUES (?, ?)";
                 jdbcTemplate.update(sqlQuery,
                         filmId,
@@ -57,25 +61,25 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findAll() {
         String sql = "SELECT f.id id, f.name name, f.description description, " +
-                "f.ratingId ratingId, r.rating AS rating_name, " + // изменено с mpa_id и m.name на ratingId и r.rating
-                "f.releaseDate releaseDate, f.duration duration, g.name AS genres_name " + // изменено с g.NAME
-                "FROM film f " + // изменено с films
-                "JOIN filmrating r ON r.id = f.ratingId " + // изменено с mpa на filmrating
-                "JOIN filmGenre fg ON fg.filmId = f.id " + // изменено с films_genres на filmGenre, поля filmId
-                "JOIN genre g ON g.id = fg.genreId"; // изменено с genres и поля id
+                "f.ratingId ratingId, r.rating AS rating_name, " +
+                "f.releaseDate releaseDate, f.duration duration, g.name AS genres_name " +
+                "FROM film f " +
+                "JOIN filmrating r ON r.id = f.ratingId " +
+                "JOIN filmGenre fg ON fg.filmId = f.id " +
+                "JOIN genre g ON g.id = fg.genreId";
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs));
     }
 
     @Override
     public boolean deleteById(Long id) {
-        String sqlQuery = "DELETE FROM likedUsers WHERE filmId = ?"; // изменено с film_likes на likedUsers, поле filmId
+        String sqlQuery = "DELETE FROM likedUsers WHERE filmId = ?";
         jdbcTemplate.update(sqlQuery, id);
 
-        sqlQuery = "DELETE FROM filmGenre WHERE filmId = ?"; // изменено с films_genres на filmGenre, поле filmId
+        sqlQuery = "DELETE FROM filmGenre WHERE filmId = ?";
         jdbcTemplate.update(sqlQuery, id);
 
-        sqlQuery = "DELETE FROM film WHERE id = ?"; // изменено с films на film
+        sqlQuery = "DELETE FROM film WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
 
@@ -83,8 +87,8 @@ public class FilmDbStorage implements FilmStorage {
     public Film update(Film film) {
         findById(film.getId());
 
-        String sqlQuery = "UPDATE film SET " + // изменено с films на film
-                "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + // изменено с mpa_id на ratingId
+        String sqlQuery = "UPDATE film SET " +
+                "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " +
                 "WHERE id = ?";
         jdbcTemplate.update(sqlQuery,
                 film.getName(),
@@ -94,10 +98,10 @@ public class FilmDbStorage implements FilmStorage {
                 film.getMpa().getId(),
                 film.getId());
         if (film.getGenres() != null) {
-            String genreSqlQuery = "DELETE FROM filmGenre WHERE filmId = ?"; // изменено с films_genres на filmGenre, поле filmId
+            String genreSqlQuery = "DELETE FROM filmGenre WHERE filmId = ?";
             jdbcTemplate.update(genreSqlQuery, film.getId());
             for (Genre genre : film.getGenres()) {
-                genreSqlQuery = "INSERT INTO filmGenre(filmId, genreId) " + // изменено с films_genres на filmGenre
+                genreSqlQuery = "INSERT INTO filmGenre(filmId, genreId) " +
                         "VALUES (?, ?)";
                 jdbcTemplate.update(genreSqlQuery,
                         film.getId(),
@@ -106,11 +110,11 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         if (film.getLikes() != null) {
-            String likeSqlQuery = "DELETE FROM likedUsers WHERE filmId = ?"; // изменено с film_likes на likedUsers, поле filmId
+            String likeSqlQuery = "DELETE FROM likedUsers WHERE filmId = ?";
             jdbcTemplate.update(likeSqlQuery, film.getId());
 
             for (Long userId : film.getLikes()) {
-                likeSqlQuery = "INSERT INTO likedUsers(filmId, userId) " + // изменено с film_likes на likedUsers
+                likeSqlQuery = "INSERT INTO likedUsers(filmId, userId) " +
                         "VALUES (?, ?)";
                 jdbcTemplate.update(likeSqlQuery,
                         film.getId(),
@@ -123,15 +127,15 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film findById(Long id) {
         String sql = "SELECT f.id id, f.name name, f.description description, " +
-                "f.ratingId ratingId, r.rating AS rating_name, " + // изменено с mpa_id и m.name на ratingId и r.rating
+                "f.ratingId ratingId, r.rating AS rating_name, " +
                 "f.releaseDate releaseDate, f.duration duration " +
-                "FROM film f " + // изменено с films
-                "JOIN filmrating r ON r.id = f.ratingId " + // изменено с mpa на filmrating
+                "FROM film f " +
+                "JOIN filmrating r ON r.id = f.ratingId " +
                 "WHERE f.id = ?";
 
         List<Film> filmCollection = jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), id);
         if (filmCollection.size() == 1) {
-            return filmCollection.get(0); // исправлено с getFirst() на get(0)
+            return filmCollection.get(0);
         } else {
             throw new NotFoundException(String.format("Фильма с id-%d не существует.", id));
         }
@@ -148,12 +152,12 @@ public class FilmDbStorage implements FilmStorage {
         Integer duration = rs.getInt("duration");
 
         String genreSql = "SELECT DISTINCT g.* " +
-                "FROM filmGenre fg " + // изменено с films_genres на filmGenre
-                "JOIN genre g ON fg.genreId = g.id " + // изменено с genres и поля genre_id
-                "WHERE fg.filmId = ?"; // изменено с film_id на filmId
+                "FROM filmGenre fg " +
+                "JOIN genre g ON fg.genreId = g.id " +
+                "WHERE fg.filmId = ?";
         List<Genre> genreCollection = jdbcTemplate.query(genreSql, (rs1, rowNum) -> makeFilmsGenre(rs1), id);
 
-        String likesSql = "SELECT * FROM likedUsers WHERE filmId = ?"; // изменено с film_likes на likedUsers
+        String likesSql = "SELECT * FROM likedUsers WHERE filmId = ?";
         List<Long> usersCollection = jdbcTemplate.query(likesSql, (rs1, rowNum) -> Long.valueOf(makeFilmsLike(rs1)), id);
 
         return new Film(id, name, description, releaseDate, duration,
@@ -169,9 +173,8 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Integer makeFilmsLike(ResultSet rs) throws SQLException {
-        return rs.getInt("userId"); // изменено с user_id на userId
+        return rs.getInt("userId");
     }
-
 }
 
 

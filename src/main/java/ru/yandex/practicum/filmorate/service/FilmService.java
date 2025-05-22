@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
 @Service
 @Slf4j(topic = "TRACE")
 @RequiredArgsConstructor
@@ -63,9 +62,6 @@ public class FilmService {
         } catch (Exception e) {
             throw new NotFoundException("Фильм не найден");
         }
-       // if (user.getLikedFilms().contains(idFilm)) {
-      //      throw new DuplicatedDataException("Пользователь " + user.getName() + " уже ставил лайк фильму " + film.getName());
-     //   }
         Set<Long> filmLikesId = film.getLikes();
         filmLikesId.add(idUser);
         film.setLikes(filmLikesId);
@@ -87,12 +83,6 @@ public class FilmService {
         if (film == null) {
             throw new NotFoundException("Фильм с id = " + idFilm + " не найден");
         }
-//        if (user.getLikedFilms().contains(idFilm)) {
-//            Set<Integer> filmLikesId = film.getLikes();
-//            filmLikesId.remove(idUser);
-//            film.setLikes(filmLikesId);
-//            return film;
-//        }
         return film;
     }
 
@@ -131,5 +121,4 @@ public class FilmService {
             }
         }
     }
-
 }

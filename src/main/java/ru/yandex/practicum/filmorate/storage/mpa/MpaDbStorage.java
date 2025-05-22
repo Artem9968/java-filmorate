@@ -22,13 +22,13 @@ public class MpaDbStorage implements MpaStorage {
 
     @Override
     public List<Mpa> findAll() {
-        String sql = "SELECT id, rating AS name FROM filmrating ORDER BY id"; // изменено: mpa → filmrating, rating AS name
+        String sql = "SELECT id, rating AS name FROM filmrating ORDER BY id";
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsMpa(rs));
     }
 
     @Override
     public Mpa findById(Long id) {
-        String sql = "SELECT id, rating AS name FROM filmrating WHERE id = ?"; // изменено: mpa → filmrating, rating AS name
+        String sql = "SELECT id, rating AS name FROM filmrating WHERE id = ?";
 
         List<Mpa> mpaCollection = jdbcTemplate.query(sql, (rs, rowNum) -> makeFilmsMpa(rs), id);
         if (mpaCollection.size() == 1) {
@@ -40,16 +40,16 @@ public class MpaDbStorage implements MpaStorage {
 
     @Override
     public boolean deleteById(Integer id) {
-        String sqlQuery = "UPDATE film SET ratingId = NULL WHERE ratingId = ?"; // изменено: films → film, mpa_id → ratingId
+        String sqlQuery = "UPDATE film SET ratingId = NULL WHERE ratingId = ?";
         jdbcTemplate.update(sqlQuery, id);
 
-        sqlQuery = "DELETE FROM filmrating WHERE id = ?"; // изменено: mpa → filmrating
+        sqlQuery = "DELETE FROM filmrating WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
 
     private Mpa makeFilmsMpa(ResultSet rs) throws SQLException {
         Long mpaId = rs.getLong("id");
-        String mpaName = rs.getString("name"); // name теперь соответствует псевдониму rating
+        String mpaName = rs.getString("name");
         return new Mpa(mpaId, mpaName);
     }
 }
