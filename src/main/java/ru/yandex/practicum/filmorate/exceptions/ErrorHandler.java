@@ -46,4 +46,10 @@ public class ErrorHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", message));
     }
+
+    @ExceptionHandler(ConditionsNotMetException.class)
+    public ResponseEntity<Map<String, String>> handleConditionsNotMetException(ConditionsNotMetException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+    }
 }

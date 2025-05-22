@@ -1,82 +1,84 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
+
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+    private static final String USER_ID_PATH = "/{id}";
+    private static final String FRIENDS_PATH = USER_ID_PATH + "/friends";
+    private static final String FRIEND_ID_PATH = FRIENDS_PATH + "/{friendId}";
+    private static final String COMMON_FRIENDS_PATH = USER_ID_PATH + "/friends/common/{otherId}";
 
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+        private final UserService userService;
 
-    //получает список всех пользователей
+    // получить список всех пользователей и return список всех пользователей
+
     @GetMapping
     public Collection<User> findAll() {
-        return userService.findAll();
+        return userService.findAllUsers();
     }
 
-    //создает нового пользователя
+    //получить пользователя по его ид и return объект пользователя
+
+    @GetMapping(USER_ID_PATH)
+    public User findById(@PathVariable Long id) {
+        return userService.findUserById(id);
+    }
+
+
+    // создать нового пользователя и return созданный пользователь
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody User user) {
-        return userService.create(user);
+        return userService.createUser(user);
     }
 
-    //обновляет информацию о существующем пользователе
+        // обновить данные пользователя и return обновленный пользователь
+
     @PutMapping
-    public User update(@Valid @RequestBody User newUser) {
-        return userService.update(newUser);
+    public User update(@Valid @RequestBody User user) {
+        return userService.updateUser(user);
     }
 
-    // получение по id
-    @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
-        return userService.findById(id);
+
+    // добавить друга пользователю и return пользователь с обновленным списком друзей
+
+    @PutMapping(FRIEND_ID_PATH)
+    public User addFriend(@Valid @PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
+        return userService.addFriend(id, friendId);
     }
 
-    //добавление
-    @PutMapping("/{id}/friends/{friendId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        userService.addFriend(id, friendId);
+        // удалить друга у пользователя и return пользователь с обновленным списком друзей
+
+    @DeleteMapping(FRIEND_ID_PATH)
+    public User delFriend(@Valid @PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
+        return userService.delFriend(id, friendId);
     }
 
-    // удаление
-    @DeleteMapping("/{id}/friends/{friendId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        userService.removeFriend(id, friendId);
+    // получить список общих друзей двух пользователей и return список общих друзей
+
+    @GetMapping(COMMON_FRIENDS_PATH)
+    public Set<User> findJointFriends(@Valid @PathVariable("id") Long id, @PathVariable("otherId") Long otherId) {
+        return userService.findJointFriends(id, otherId);
     }
 
-    // получение списка
-    @GetMapping("/{id}/friends")
-    public List<User> getFriends(@PathVariable Long id) {
-        return userService.getFriends(id);
-    }
+    // получить список друзей пользователя и return список друзей
 
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
-        return userService.getCommonFriends(id, otherId);
+    @GetMapping(FRIENDS_PATH)
+    public Set<User> findAllFriends(@Valid @PathVariable("id") Long id) {
+        return userService.findAllFriends(id);
     }
 }
